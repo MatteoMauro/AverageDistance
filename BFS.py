@@ -1,5 +1,6 @@
 from TreeNode import TreeNode
 
+
 def build_tree(source, predecessor):
     find_children = lambda vertex: predecessor[vertex] == source.name
     children = list(filter(find_children, predecessor.keys()))
@@ -8,7 +9,6 @@ def build_tree(source, predecessor):
             new_node = TreeNode(node)
             source.add_node(new_node)
             build_tree(new_node, predecessor)
-
 
 
 def bfs(source, graph):
@@ -30,7 +30,7 @@ def bfs(source, graph):
 
     tree_node_root = TreeNode(source)
     build_tree(tree_node_root, predecessor)
-    return tree_node_root, count_edges
+    return tree_node_root, predecessor
 
 
 
