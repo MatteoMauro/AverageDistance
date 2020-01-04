@@ -5,3 +5,4 @@ venv/
 *.pdf
 *.gv
 grafiPDF
+random_edges.txt
