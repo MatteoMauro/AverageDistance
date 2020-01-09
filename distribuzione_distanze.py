@@ -58,7 +58,7 @@ for i in range(0, len(edges)):
 
 for e in edges:
     graph.add_edge(e[0], e[1])
-draw_graph(graph, edges)
+#draw_graph(graph, edges)
 V = graph.get_nodes()
 
 # +++ COMPUTE EXACT AVERAGE DISTANCE +++
@@ -77,35 +77,43 @@ for k in range(0, len(V)):
 print_matrix(matrix_dist)
 print('diameter = ' + str(diameter))
 # 2. compute average distance
-average_distance = sum_all_distances(matrix_dist)/(len(V)*(len(V)-1))
-print("Average distance: " + str(average_distance), end='\n\n')
+real_average_distance = sum_all_distances(matrix_dist)/(len(V)*(len(V)-1))
+print("Real average distance: " + str(real_average_distance), end='\n\n')
 
+num_iter = 30
+results = [0] * num_iter
+# Monte Carlo iterations
+for iteration in range(0, num_iter):
+    # +++ COMPUTE ESTIMATE AVERAGE DISTANCE +++
+    # 1. select random sample
+    print("CLASSICAL SAMPLING")
+    eps = 1
+    K = ceil(log(len(V))/(eps ** 2))
+    U = random.sample(V, K)
+    # 2. compute all pair vertices distances for U
+    matrix_dist = {node: dict() for node in U}
+    sample_diameter = 0
+    for i in range(0, K):
+        node = U[i]
+        [tree, predecessor] = bfs(node, graph)
+        count_distance(matrix_dist[node], predecessor, V)
+        # compute diameter so far
+        d = max(matrix_dist[node].items(), key=operator.itemgetter(1))[1]
+        if sample_diameter < d:
+            sample_diameter = d
+    print_matrix(matrix_dist)
+    print('sample diameter = ' + str(sample_diameter))
+    # 3. estimate average distance
+    N = {}
+    average_distance = 0
+    for h in range(1, sample_diameter):
+        N[h] = compute_freq_distr(matrix_dist, h, K, len(V))
+    for h in range(1, sample_diameter):
+        average_distance += h*N[h]
+        results[iteration] = average_distance
+    print("Estimated Average distance with " + str(K) + " nodes: " + str(average_distance) + '\n')
 
-
-# +++ COMPUTE ESTIMATE AVERAGE DISTANCE +++
-# 1. select random sample
-print("CLASSICAL SAMPLING")
-eps = 1
-K = ceil(log(len(V))/(eps ** 2))
-U = random.sample(V, K)
-# 2. compute all pair vertices distances for U
-matrix_dist = {node: dict() for node in U}
-sample_diameter = 0
-for i in range(0, K):
-    node = U[i]
-    [tree, predecessor] = bfs(node, graph)
-    count_distance(matrix_dist[node], predecessor, V)
-    # compute diameter so far
-    d = max(matrix_dist[node].items(), key=operator.itemgetter(1))[1]
-    if sample_diameter < d:
-        sample_diameter = d
-print_matrix(matrix_dist)
-print('sample diameter = ' + str(sample_diameter))
-# 3. estimate average distance
-N = {}
-average_distance = 0
-for h in range(1, sample_diameter):
-    N[h] = compute_freq_distr(matrix_dist, h, K, len(V))
-for h in range(1, sample_diameter):
-    average_distance += h*N[h]
-print("Estimated Average distance with " + str(K) + " nodes: " + str(average_distance))
+rst = sum(results)/num_iter
+print("Max Error required: " + str(eps))
+print("Real average distance: " + str(real_average_distance))
+print("Final average estimated: " + str(rst))
